@@ -1,0 +1,11 @@
+{
+  "name": "protobuf-js-typer",
+  "version": "0.0.1",
+  "description": "A Flowtype/typescript definitions generator for your .proto IDL files",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "author": "",
+  "license": "ISC"
+}
