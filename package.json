@@ -28,7 +28,7 @@
   },
   "ava": {
     "require": [
-      "babel-register",
+      "babel-core/register",
       "./src/test-support/setup-sinon-chai.js"
     ],
     "babel": "inherit"
