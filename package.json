@@ -1,6 +1,7 @@
 {
   "name": "protobuf-js-typer",
   "version": "0.0.1",
+  "repository": "git@github.com:flegall/protobuf-js-typer.git",
   "description": "A Flowtype/typescript definitions generator for your .proto IDL files",
   "main": "index.js",
   "scripts": {
@@ -21,8 +22,9 @@
   },
   "dependencies": {
     "babel-core": "^6.11.4",
+    "babel-polyfill": "^6.9.1",
     "babel-preset-es2015": "^6.9.0",
-    "babel-polyfill": "^6.9.1"
+    "pegjs": "^0.9.0"
   },
   "ava": {
     "require": [
