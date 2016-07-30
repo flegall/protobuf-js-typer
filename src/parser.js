@@ -28,10 +28,36 @@ Messages "messages"
     = Message*
 
 Message "message"
-    = _* 'message' _* messageName:IdentifierName _* "{" _* "}" _* { return {
+    = _* 'message' _* messageName:IdentifierName _* "{" _* fields:FieldDefinition* _* "}" _* { return {
         name: messageName,
-        fields: [],
+        fields: fields,
     };}
+
+FieldDefinition "field definition"
+    = _* type:FieldType _ name:IdentifierName _* "=" _* Number _* ";" _* {
+        return {
+            name: name,
+            type: type,
+            repeated: false,
+        };
+    }
+
+FieldType "field type"
+    = 'double'
+    / 'float'
+    / 'int32'
+    / 'int64'
+    / 'uint32'
+    / 'uint64'
+    / 'sint32'
+    / 'sint64'
+    / 'fixed32'
+    / 'fixed64'
+    / 'sfixed32'
+    / 'sfixed64'
+    / 'bool'
+    / 'string'
+    / 'bytes'
 
 IdentifierName "identifier"
     = head:IdentifierStart tail:IdentifierPart* {
@@ -45,7 +71,13 @@ IdentifierStart
 
 IdentifierPart
     = IdentifierStart
-    / [0-9]
+    / Digit
+
+Number "number"
+    = Digit+
+
+Digit "digit"
+    = [0-9]
 
 _ "whitespace"
     = "\t"

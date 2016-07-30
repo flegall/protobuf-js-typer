@@ -16,13 +16,19 @@ test('Parser - Parses a file and returns the full path of the .proto file', () =
 });
 
 test('Parser - Parses a simple message', () => {
-    const proto = `message SimpleMessage {}`;
+    const proto = `message SimpleMessage {
+        string query = 1;
+    }`;
 
     const {messages} = parseString(proto, 'some.proto');
 
     expect(messages).to.have.length(1);
     const [message] = messages;
-    expect(message).to.deep.equal({name: 'SimpleMessage', fields: []});
+    expect(message).to.deep.equal({name: 'SimpleMessage', fields: [{
+        name: 'query',
+        type: 'string',
+        repeated: false,
+    }]});
 });
 
 test('Parser - Parses multiple messages', () => {
