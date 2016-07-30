@@ -28,7 +28,7 @@ Messages "messages"
     = Message*
 
 Message "message"
-    = _ 'message' _ messageName:IdentifierName _ "{" _ "}" _ { return {
+    = _* 'message' _* messageName:IdentifierName _* "{" _* "}" _* { return {
         name: messageName,
         fields: [],
     };}
@@ -38,19 +38,16 @@ IdentifierName "identifier"
         return head + tail.join('');
     }
 
-IdentifierStart "identifier first digit"
+IdentifierStart
     = [A-Za-z]
     / "$"
     / "_"
 
-IdentifierPart "identifier remainer"
+IdentifierPart
     = IdentifierStart
     / [0-9]
 
 _ "whitespace"
-    = WhiteSpace*
-
-WhiteSpace "whitespace digit"
     = "\t"
     / "\\n"
     / "\v"
