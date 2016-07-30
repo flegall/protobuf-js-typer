@@ -28,7 +28,7 @@ messages
     = message*
 
 message
-    = 'message' _* messageName:IdentifierName _* {return {
+    = _* 'message' _* messageName:IdentifierName _* { return {
         name: messageName,
         fields: [],
     };}
@@ -45,7 +45,7 @@ IdentifierStart
 
 IdentifierPart
     = IdentifierStart
-    / [0-8]
+    / [0-9]
 
 _ "whitespace"
     = "\t"
@@ -57,11 +57,16 @@ _ "whitespace"
     / "\uFEFF"
     / [\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]
 `;
+const PARSER = PEG.buildParser(GRAMMAR);;
 
 export default function parseFile(fileName: string): ProtocolFile {
     const absolutePath = path.resolve(fileName);
     const fileContent = fs.readFileSync(absolutePath, 'utf8');
-    const parser = PEG.buildParser(GRAMMAR);
-    const messages = parser.parse(fileContent);
+    const messages = PARSER.parse(fileContent);
+    return parseString(fileContent, absolutePath);
+}
+
+export function parseString(fileContent: string, absolutePath: string): ProtocolFile {
+    const messages = PARSER.parse(fileContent);
     return {fullPath: absolutePath, messages};
 }
