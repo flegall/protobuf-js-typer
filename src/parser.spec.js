@@ -16,7 +16,7 @@ test('Parser - Parses a file and returns the full path of the .proto file', () =
 });
 
 test('Parser - Parses a simple message', () => {
-    const proto = `message SimpleMessage`;
+    const proto = `message SimpleMessage {}`;
 
     const {messages} = parseString(proto, 'some.proto');
 
@@ -26,8 +26,8 @@ test('Parser - Parses a simple message', () => {
 });
 
 test('Parser - Parses multiple messages', () => {
-    const proto = `message FirstMessage
-message SecondMessage`;
+    const proto = `message FirstMessage {}
+message SecondMessage {}`;
 
     const {messages} = parseString(proto, 'some.proto');
 
@@ -39,8 +39,8 @@ message SecondMessage`;
 
 test('Parser - Handles whitespace everywhere', () => {
     const proto = `
-    message FirstMessage
-    message SecondMessage
+    message FirstMessage { }
+    message SecondMessage { }
 `;
 
     const {messages} = parseString(proto, 'some.proto');

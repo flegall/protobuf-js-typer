@@ -22,13 +22,13 @@ export type ProtocolFile = {
 
 const GRAMMAR: string = `
 start
-    = messages
+    = Messages
 
-messages
-    = message*
+Messages "messages"
+    = Message*
 
-message
-    = _* 'message' _* messageName:IdentifierName _* { return {
+Message "message"
+    = _* 'message' _* messageName:IdentifierName _* "{" _* "}" _* { return {
         name: messageName,
         fields: [],
     };}
