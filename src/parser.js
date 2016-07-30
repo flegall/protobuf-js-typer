@@ -89,7 +89,7 @@ _ "whitespace"
     / "\uFEFF"
     / [\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]
 `;
-const PARSER = PEG.buildParser(GRAMMAR);;
+const PARSER = PEG.buildParser(GRAMMAR);
 
 export default function parseFile(fileName: string): ProtocolFile {
     const absolutePath = path.resolve(fileName);
