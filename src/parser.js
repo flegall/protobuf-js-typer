@@ -167,7 +167,7 @@ Number "number"
 Digit "digit"
     = [0-9]
 
-_ "whitespace"
+_ "whitespace or comments"
     = "\t"
     / "\\n"
     / "\v"
@@ -176,6 +176,8 @@ _ "whitespace"
     / "\u00A0"
     / "\uFEFF"
     / [\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]
+    / '//' [^\\n]* '\\n'
+    / "/*" (!"*/" .)* "*/"
 `;
 const PARSER = PEG.buildParser(GRAMMAR);
 

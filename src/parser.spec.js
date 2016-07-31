@@ -80,6 +80,36 @@ test('Parser - Handles whitespace everywhere', () => {
     expect(messages).to.have.length(2);
 });
 
+test('Parser - Handles // comments everywhere', () => {
+    const proto = `
+    // first
+    message FirstMessage { }
+    message SecondMessage { }// a command at the of the line
+    // message CommentedMessage { }
+`;
+
+    const {messages} = parseString(proto, 'some.proto');
+
+    expect(messages).to.have.length(2);
+});
+
+test('Parser - Handles /* */ comments everywhere', () => {
+    const proto = `
+    /* comment */
+    message FirstMessage {/*nothing here*/}
+    /*
+    message CommentedMessage1
+    */
+    message SecondMessage { }/*
+    message CommentedMessage2
+    */
+`;
+
+    const {messages} = parseString(proto, 'some.proto');
+
+    expect(messages).to.have.length(2);
+});
+
 test('Parser - Handles enums inside a message', () => {
     const proto = `message SimpleMessage {
         Corpus corpus = 1;
