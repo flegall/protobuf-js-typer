@@ -24,11 +24,37 @@ test('Parser - Parses a simple message', () => {
 
     expect(messages).to.have.length(1);
     const [message] = messages;
-    expect(message).to.deep.equal({name: 'SimpleMessage', fields: [{
-        name: 'query',
-        type: 'string',
-        repeated: false,
-    }]});
+    expect(message).to.deep.equal({name: 'SimpleMessage', fields: [
+        {
+            name: 'query',
+            type: 'string',
+            repeated: false,
+        },
+    ]});
+});
+
+test('Parser - Parses a repeated/non-repeated fields', () => {
+    const proto = `message SimpleMessage {
+        string query = 1;
+        repeated string options = 2;
+    }`;
+
+    const {messages} = parseString(proto, 'some.proto');
+
+    expect(messages).to.have.length(1);
+    const [message] = messages;
+    expect(message).to.deep.equal({name: 'SimpleMessage', fields: [
+        {
+            name: 'query',
+            type: 'string',
+            repeated: false,
+        },
+        {
+            name: 'options',
+            type: 'string',
+            repeated: true,
+        },
+    ]});
 });
 
 test('Parser - Parses multiple messages', () => {

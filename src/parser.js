@@ -30,12 +30,13 @@ function buildMessage(messageName: string, messageInternals: MessageInternal[]):
         fields: messageInternals.map(toField),
     };
 }
-function buildFieldInternal(name: string, type: FieldType): FieldInternal {
+
+function buildFieldInternal(name: string, type: FieldType, repeated: ?string): FieldInternal {
     return {
         instanceOf: 'field',
         name: name,
         type: type,
-        repeated: false,
+        repeated: !!repeated,
     };
 }
 
@@ -68,9 +69,12 @@ Message "message"
     }
 
 FieldDefinition "field definition"
-    = _* type:FieldType _ name:IdentifierName _* "=" _* Number _* ";" _* {
-        return buildFieldInternal(name, type);
+    = _* repeated:Repeated? _* type:FieldType _+ name:IdentifierName _* "=" _* Number _* ";" _* {
+        return buildFieldInternal(name, type, repeated);
     }
+
+Repeated "repeated options"
+    = 'repeated' _
 
 FieldType "field type"
     = 'double'
