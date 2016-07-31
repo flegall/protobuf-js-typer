@@ -14,13 +14,48 @@ export type Field = {
 export type Message = {
     name: string;
     fields: Field[];
-}
+};
 export type ProtocolFile = {
     fullPath: string;
     messages: Message[];
+};
+type FieldInternal = Field & {
+    instanceOf: 'field';
+};
+type MessageInternal = FieldInternal;
+
+function buildMessage(messageName: string, messageInternals: MessageInternal[]): Message {
+    return {
+        name: messageName,
+        fields: messageInternals.map(toField),
+    };
+}
+function buildFieldInternal(name: string, type: FieldType): FieldInternal {
+    return {
+        instanceOf: 'field',
+        name: name,
+        type: type,
+        repeated: false,
+    };
+}
+
+function toField({name, type, repeated}: FieldInternal): Field {
+    return {
+        name, type, repeated,
+    };
+}
+
+function exportFunctions(...functions: Function[]): string {
+    return `
+        {
+            ${functions.map(f => f.toString()).join('\n')}
+        }
+    `;
 }
 
 const GRAMMAR: string = `
+${exportFunctions(buildFieldInternal, toField, buildMessage)}
+
 start
     = Messages
 
@@ -28,18 +63,13 @@ Messages "messages"
     = Message*
 
 Message "message"
-    = _* 'message' _* messageName:IdentifierName _* "{" _* fields:FieldDefinition* _* "}" _* { return {
-        name: messageName,
-        fields: fields,
-    };}
+    = _* 'message' _* messageName:IdentifierName _* "{" _* fields:FieldDefinition* _* "}" _* {
+        return buildMessage(messageName, fields);
+    }
 
 FieldDefinition "field definition"
     = _* type:FieldType _ name:IdentifierName _* "=" _* Number _* ";" _* {
-        return {
-            name: name,
-            type: type,
-            repeated: false,
-        };
+        return buildFieldInternal(name, type);
     }
 
 FieldType "field type"
