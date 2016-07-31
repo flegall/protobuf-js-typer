@@ -5,30 +5,49 @@ import fs from 'fs';
 
 export type FieldType = 'double' | 'float' | 'int32' | 'int64' | 'uint32' |
     'uint64' | 'sint32' | 'sint64' | 'fixed32' | 'fixed64' | 'sfixed32' |
-    'sfixed64' | 'bool' | 'string' | 'bytes';
+    'sfixed64' | 'bool' | 'string' | 'bytes' | string;
 export type Field = {
     name: string;
     type: FieldType;
     repeated: boolean;
 };
+export type Enum = {
+    name: string;
+    values: EnumValue[];
+};
+export type EnumValue = {
+    value: string;
+};
 export type Message = {
     name: string;
     fields: Field[];
+    enums: Enum[];
 };
 export type ProtocolFile = {
     fullPath: string;
     messages: Message[];
 };
-type FieldInternal = Field & {
+type FieldInternal = {
     instanceOf: 'field';
-};
-type MessageInternal = FieldInternal;
+} & Field;
+type EnumInternal = {
+    instanceOf: 'enum';
+} & Enum;
+type MessageInternal = FieldInternal | EnumInternal;
 
 function buildMessage(messageName: string, messageInternals: MessageInternal[]): Message {
+    const fields: FieldInternal[] = cast(messageInternals.filter(({instanceOf}) => instanceOf === 'field'));
+    const enums: EnumInternal[] = cast(messageInternals.filter(({instanceOf}) => instanceOf === 'enum'));
+
     return {
         name: messageName,
-        fields: messageInternals.map(toField),
+        fields: fields.map(toField),
+        enums: enums.map(toEnum),
     };
+
+    function cast<T>(value: any): T {
+        return value;
+    }
 }
 
 function buildFieldInternal(name: string, type: FieldType, repeated: ?string): FieldInternal {
@@ -46,6 +65,25 @@ function toField({name, type, repeated}: FieldInternal): Field {
     };
 }
 
+function buildEnumInternal(name: string, values: EnumValue[]): EnumInternal {
+    return {
+        instanceOf: 'enum',
+        name, values,
+    };
+}
+
+function toEnum({name, values}: EnumInternal): Enum {
+    return {
+        name, values,
+    };
+}
+
+function buildEnumValue(value: string): EnumValue {
+    return {
+        value,
+    };
+}
+
 function exportFunctions(...functions: Function[]): string {
     return `
         {
@@ -55,7 +93,8 @@ function exportFunctions(...functions: Function[]): string {
 }
 
 const GRAMMAR: string = `
-${exportFunctions(buildFieldInternal, toField, buildMessage)}
+${exportFunctions(buildFieldInternal, toField, buildMessage, buildEnumInternal,
+    buildEnumValue, toEnum)}
 
 start
     = Messages
@@ -64,8 +103,22 @@ Messages "messages"
     = Message*
 
 Message "message"
-    = _* 'message' _* messageName:IdentifierName _* "{" _* fields:FieldDefinition* _* "}" _* {
-        return buildMessage(messageName, fields);
+    = _* 'message' _* messageName:IdentifierName _* "{" _* internals:MessageInternal* _* "}" _* {
+        return buildMessage(messageName, internals);
+    }
+
+MessageInternal "message internal definition"
+    = FieldDefinition
+    / EnumDefinition
+
+EnumDefinition "enum definition"
+    = _* 'enum' _+ name:IdentifierName _* '{' _* values:EnumValue+ _* '}' _* {
+        return buildEnumInternal(name, values);
+    }
+
+EnumValue "enum value"
+    = _* name:IdentifierName _+ '=' _+ Number _* ';' _* {
+        return buildEnumValue(name);
     }
 
 FieldDefinition "field definition"
@@ -92,6 +145,7 @@ FieldType "field type"
     / 'bool'
     / 'string'
     / 'bytes'
+    / IdentifierName
 
 IdentifierName "identifier"
     = head:IdentifierStart tail:IdentifierPart* {

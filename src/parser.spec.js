@@ -24,7 +24,7 @@ test('Parser - Parses a simple message', () => {
 
     expect(messages).to.have.length(1);
     const [message] = messages;
-    expect(message).to.deep.equal({name: 'SimpleMessage', fields: [
+    expect(message).to.deep.equal({name: 'SimpleMessage', enums: [], fields: [
         {
             name: 'query',
             type: 'string',
@@ -43,7 +43,7 @@ test('Parser - Parses a repeated/non-repeated fields', () => {
 
     expect(messages).to.have.length(1);
     const [message] = messages;
-    expect(message).to.deep.equal({name: 'SimpleMessage', fields: [
+    expect(message).to.deep.equal({name: 'SimpleMessage', enums: [], fields: [
         {
             name: 'query',
             type: 'string',
@@ -64,8 +64,8 @@ message SecondMessage {}`;
     const {messages} = parseString(proto, 'some.proto');
 
     expect(messages).to.deep.equal([
-        {name: 'FirstMessage', fields: []},
-        {name: 'SecondMessage', fields: []},
+        {name: 'FirstMessage', enums: [], fields: []},
+        {name: 'SecondMessage', enums: [], fields: []},
     ]);
 });
 
@@ -78,4 +78,34 @@ test('Parser - Handles whitespace everywhere', () => {
     const {messages} = parseString(proto, 'some.proto');
 
     expect(messages).to.have.length(2);
+});
+
+test('Parser - Handles enums inside a message', () => {
+    const proto = `message SimpleMessage {
+        Corpus corpus = 1;
+        enum Corpus {
+            UNIVERSAL = 0;
+            WEB = 1;
+        }
+    }`;
+
+    const {messages} = parseString(proto, 'some.proto');
+
+    expect(messages).to.have.length(1);
+    const [message] = messages;
+    expect(message).to.deep.equal({name: 'SimpleMessage', fields: [
+        {
+            name: 'corpus',
+            type: 'Corpus',
+            repeated: false,
+        },
+    ], enums: [
+        {
+            name: 'Corpus',
+            values: [
+                {value: 'UNIVERSAL'},
+                {value: 'WEB'},
+            ],
+        }
+    ]});
 });
