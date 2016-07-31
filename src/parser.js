@@ -27,17 +27,23 @@ export type ProtocolFile = {
     fullPath: string;
     messages: Message[];
 };
-type FieldInternal = {
+type FieldDefinition = {
     instanceOf: 'field';
 } & Field;
-type EnumInternal = {
+type EnumDefinition = {
     instanceOf: 'enum';
 } & Enum;
-type MessageInternal = FieldInternal | EnumInternal;
+type MessageDefinition = {
+    instanceOf: 'message';
+} & Message;
+type MessageOrEnum = MessageDefinition | EnumDefinition;
+type MessageInternal = FieldDefinition | EnumDefinition;
 
 function buildMessage(messageName: string, messageInternals: MessageInternal[]): Message {
-    const fields: FieldInternal[] = cast(messageInternals.filter(({instanceOf}) => instanceOf === 'field'));
-    const enums: EnumInternal[] = cast(messageInternals.filter(({instanceOf}) => instanceOf === 'enum'));
+    const fields: FieldDefinition[] = cast(messageInternals.filter(
+        ({instanceOf}) => instanceOf === 'field'));
+    const enums: EnumDefinition[] = cast(messageInternals.filter(
+        ({instanceOf}) => instanceOf === 'enum'));
 
     return {
         name: messageName,
@@ -50,7 +56,7 @@ function buildMessage(messageName: string, messageInternals: MessageInternal[]):
     }
 }
 
-function buildFieldInternal(name: string, type: FieldType, repeated: ?string): FieldInternal {
+function buildFieldDefinition(name: string, type: FieldType, repeated: ?string): FieldDefinition {
     return {
         instanceOf: 'field',
         name: name,
@@ -59,20 +65,20 @@ function buildFieldInternal(name: string, type: FieldType, repeated: ?string): F
     };
 }
 
-function toField({name, type, repeated}: FieldInternal): Field {
+function toField({name, type, repeated}: FieldDefinition): Field {
     return {
         name, type, repeated,
     };
 }
 
-function buildEnumInternal(name: string, values: EnumValue[]): EnumInternal {
+function buildEnumDefinition(name: string, values: EnumValue[]): EnumDefinition {
     return {
         instanceOf: 'enum',
         name, values,
     };
 }
 
-function toEnum({name, values}: EnumInternal): Enum {
+function toEnum({name, values}: EnumDefinition): Enum {
     return {
         name, values,
     };
@@ -93,13 +99,13 @@ function exportFunctions(...functions: Function[]): string {
 }
 
 const GRAMMAR: string = `
-${exportFunctions(buildFieldInternal, toField, buildMessage, buildEnumInternal,
+${exportFunctions(buildFieldDefinition, toField, buildMessage, buildEnumDefinition,
     buildEnumValue, toEnum)}
 
 start
-    = Messages
+    = ProtocolFile
 
-Messages "messages"
+ProtocolFile "protocol file"
     = Message*
 
 Message "message"
@@ -113,7 +119,7 @@ MessageInternal "message internal definition"
 
 EnumDefinition "enum definition"
     = _* 'enum' _+ name:IdentifierName _* '{' _* values:EnumValue+ _* '}' _* {
-        return buildEnumInternal(name, values);
+        return buildEnumDefinition(name, values);
     }
 
 EnumValue "enum value"
@@ -123,7 +129,7 @@ EnumValue "enum value"
 
 FieldDefinition "field definition"
     = _* repeated:Repeated? _* type:FieldType _+ name:IdentifierName _* "=" _* Number _* ";" _* {
-        return buildFieldInternal(name, type, repeated);
+        return buildFieldDefinition(name, type, repeated);
     }
 
 Repeated "repeated options"
