@@ -23,9 +23,12 @@ export type Message = {
     fields: Field[];
     enums: Enum[];
 };
-export type ProtocolFile = {
+export type ParsedProtocolFile = {
     fullPath: string;
+};
+type ProtocolFile = {
     messages: Message[];
+    enums: Enum[];
 };
 type FieldDefinition = {
     instanceOf: 'field';
@@ -39,7 +42,18 @@ type MessageDefinition = {
 type MessageOrEnum = MessageDefinition | EnumDefinition;
 type MessageInternal = FieldDefinition | EnumDefinition;
 
-function buildMessage(messageName: string, messageInternals: MessageInternal[]): Message {
+function buildProtocolFile(messagesOrEnums: MessageOrEnum[]): ProtocolFile {
+    const enums: EnumDefinition[] = cast(messagesOrEnums.filter(
+        ({instanceOf}) => instanceOf === 'enum'));
+    const messages: MessageDefinition[] = cast(messagesOrEnums.filter(
+        ({instanceOf}) => instanceOf === 'message'));
+    return {
+        messages: messages.map(({instanceOf, name, fields, enums}) => ({name, fields, enums})),
+        enums: enums.map(({instanceOf, name, values}) => ({name, values})),
+    };
+}
+
+function buildMessageDefinition(messageName: string, messageInternals: MessageInternal[]): MessageDefinition {
     const fields: FieldDefinition[] = cast(messageInternals.filter(
         ({instanceOf}) => instanceOf === 'field'));
     const enums: EnumDefinition[] = cast(messageInternals.filter(
@@ -49,11 +63,8 @@ function buildMessage(messageName: string, messageInternals: MessageInternal[]):
         name: messageName,
         fields: fields.map(toField),
         enums: enums.map(toEnum),
+        instanceOf: 'message',
     };
-
-    function cast<T>(value: any): T {
-        return value;
-    }
 }
 
 function buildFieldDefinition(name: string, type: FieldType, repeated: ?string): FieldDefinition {
@@ -99,18 +110,27 @@ function exportFunctions(...functions: Function[]): string {
 }
 
 const GRAMMAR: string = `
-${exportFunctions(buildFieldDefinition, toField, buildMessage, buildEnumDefinition,
-    buildEnumValue, toEnum)}
+${exportFunctions(
+    buildProtocolFile,
+    buildMessageDefinition,
+    buildFieldDefinition, toField,
+    buildEnumDefinition, buildEnumValue, toEnum,
+    cast)}
 
 start
     = ProtocolFile
-
 ProtocolFile "protocol file"
-    = Message*
+    = messagesOrEnums:MessageOrEnum* {
+        return buildProtocolFile(messagesOrEnums);
+    }
 
-Message "message"
+MessageOrEnum "message or enum"
+    = MessageDefinition
+    / EnumDefinition
+
+MessageDefinition "message"
     = _* 'message' _* messageName:IdentifierName _* "{" _* internals:MessageInternal* _* "}" _* {
-        return buildMessage(messageName, internals);
+        return buildMessageDefinition(messageName, internals);
     }
 
 MessageInternal "message internal definition"
@@ -187,14 +207,21 @@ _ "whitespace or comments"
 `;
 const PARSER = PEG.buildParser(GRAMMAR);
 
-export default function parseFile(fileName: string): ProtocolFile {
-    const absolutePath = path.resolve(fileName);
-    const fileContent = fs.readFileSync(absolutePath, 'utf8');
+export default function parseFile(fileName: string): ParsedProtocolFile {
+    const fullPath = path.resolve(fileName);
+    const fileContent = fs.readFileSync(fullPath, 'utf8');
     const messages = PARSER.parse(fileContent);
-    return parseString(fileContent, absolutePath);
+
+    return {
+        fullPath,
+        ...(parseString(fileContent)),
+    }
 }
 
-export function parseString(fileContent: string, absolutePath: string): ProtocolFile {
-    const messages = PARSER.parse(fileContent);
-    return {fullPath: absolutePath, messages};
+export function parseString(fileContent: string): ProtocolFile {
+    return PARSER.parse(fileContent);
+}
+
+function cast<T>(value: any): T {
+    return value;
 }

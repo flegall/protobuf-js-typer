@@ -110,7 +110,25 @@ test('Parser - Handles /* */ comments everywhere', () => {
     expect(messages).to.have.length(2);
 });
 
-test('Parser - Handles enums inside a message', () => {
+test('Parser - Parses enums', () => {
+    const proto = `enum Corpus {
+        UNIVERSAL = 0;
+            WEB = 1;
+    }`;
+
+    const {enums} = parseString(proto, 'some.proto');
+
+    expect(enums).to.have.length(1);
+    expect(enums[0]).to.deep.equal({
+        name: 'Corpus',
+        values: [
+            {value: 'UNIVERSAL'},
+            {value: 'WEB'},
+        ],
+    });
+});
+
+test('Parser - Parses enums inside a message', () => {
     const proto = `message SimpleMessage {
         Corpus corpus = 1;
         enum Corpus {
