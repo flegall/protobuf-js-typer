@@ -205,7 +205,7 @@ _ "whitespace or comments"
     / '//' [^\\n]* '\\n'
     / "/*" (!"*/" .)* "*/"
 `;
-const PARSER = PEG.buildParser(GRAMMAR);
+const PARSER = PEG.generate(GRAMMAR);
 
 export default function parseFile(fileName: string): ParsedProtocolFile {
     const fullPath = path.resolve(fileName);
