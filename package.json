@@ -16,7 +16,7 @@
     "ava": "0.16.0",
     "chai": "3.5.0",
     "flow-bin": "0.33.0",
-    "sinon": "1.17.6",
+    "sinon": "2.1.0",
     "sinon-chai": "2.8.0"
   },
   "dependencies": {
