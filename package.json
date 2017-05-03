@@ -27,7 +27,7 @@
     "babel-preset-es2015": "6.16.0",
     "babel-preset-react": "6.16.0",
     "pegjs": "0.10.0",
-    "yargs": "6.0.0"
+    "yargs": "8.0.1"
   },
   "engines": {
     "node": ">=4"
